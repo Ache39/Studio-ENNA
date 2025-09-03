@@ -1,0 +1,89 @@
+import openpyxl
+from openpyxl import Workbook
+from datetime import datetime
+import getpass
+import os
+
+# -----------------------------
+# CREAR ARCHIVO EXCEL SI NO EXISTE
+# -----------------------------
+filename = "registro_mipyme.xlsx"
+if not os.path.exists(filename):
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Movimientos"
+    ws.append(["ID", "Nombre", "Accion", "Fecha y Hora"])
+    wb.save(filename)
+
+# -----------------------------
+# USUARIOS (puedes ampliar este diccionario)
+# -----------------------------
+usuarios = {
+    "admin": "1234",
+    "aprendiz1": "1111",
+    "aprendiz2": "2222",
+    "aprendiz3": "3333"
+}
+
+# -----------------------------
+# FUNCIONES
+# -----------------------------
+def login():
+    print("===== LOGIN =====")
+    usuario = input("Usuario: ")
+    password = getpass.getpass("Contraseña: ")
+    if usuario in usuarios and usuarios[usuario] == password:
+        print("Acceso concedido ✔\n")
+        return True
+    else:
+        print("❌ Usuario o contraseña incorrectos")
+        return False
+
+def registrar_movimiento(nombre, accion):
+    wb = openpyxl.load_workbook(filename)
+    ws = wb["Movimientos"]
+    next_id = ws.max_row  # ID automático según filas
+    fecha = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    ws.append([next_id, nombre, accion, fecha])
+    wb.save(filename)
+    print(f"Movimiento registrado: {nombre} -> {accion} ({fecha})")
+
+
+def menu():
+    while True:
+        print("\n===== MENU PRINCIPAL =====")
+        print("1. Registrar Ingreso")
+        print("2. Registrar Retiro")
+        print("3. Ver Movimientos")
+        print("4. Salir")
+        opcion = input("Seleccione una opción: ")
+
+        if opcion == "1":
+            nombre = input("Nombre de la persona/equipo: ")
+            registrar_movimiento(nombre, "Ingreso")
+        elif opcion == "2":
+            nombre = input("Nombre de la persona/equipo: ")
+            registrar_movimiento(nombre, "Retiro")
+        elif opcion == "3":
+            mostrar_movimientos()
+        elif opcion == "4":
+            print("Saliendo del sistema... 👋")
+            break
+        else:
+            print("Opción inválida")
+
+
+def mostrar_movimientos():
+    wb = openpyxl.load_workbook(filename)
+    ws = wb["Movimientos"]
+    print("\n===== LISTADO DE MOVIMIENTOS =====")
+    for row in ws.iter_rows(values_only=True):
+        print(row)
+
+
+# -----------------------------
+# PROGRAMA PRINCIPAL
+# -----------------------------
+if __name__ == "__main__":
+    if login():
+        menu()
